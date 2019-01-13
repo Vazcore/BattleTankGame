@@ -20,13 +20,14 @@ private:
 	UWorld* World = nullptr;
 	void UpdatePlayerViewPoint(ATank*);
 	FVector GetLineTraceEnd();
-	void DrawLine(FVector LineTraceEnd);
+	void DrawLine(FVector LineTraceStart, FVector LineTraceEnd) const;
 	ATank* GetReachedTank(FVector LineTraceEnd) const;
 	FVector ViewPoint = FVector();
 	FRotator ViewRotator = FRotator();
 	void AimTowardsCrosshair();
 	bool GetSightRayHitLocation(FVector&) const;
 	bool GetLookDirection(FVector2D ScreenLocation, FVector& WorldDirection) const;
+	bool GetLookVectorHitLocation(FVector& LookDirection, FVector& HitLocation) const;
 
 	UPROPERTY(EditAnywhere)
 	float CrossHairXLocation = 0.5f;

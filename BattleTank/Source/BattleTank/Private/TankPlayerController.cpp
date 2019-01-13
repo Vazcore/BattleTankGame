@@ -32,9 +32,9 @@ void ATankPlayerController::Tick(float DeltaTime)
 
 	if (Tank != nullptr) {
 		/*LineTraceEnd = GetLineTraceEnd();
-		DrawLine(LineTraceEnd);
+		DrawLine(ViewPoint, LineTraceEnd);
 		ATank* ReachedTank = GetReachedTank(LineTraceEnd);*/
-		
+		UpdatePlayerViewPoint(Tank);
 		AimTowardsCrosshair();
 	}
 }
@@ -50,7 +50,7 @@ FVector ATankPlayerController::GetLineTraceEnd()
 	return ViewPoint + LineTraceDirection;
 }
 
-void ATankPlayerController::DrawLine(FVector LineTraceEnd)
+void ATankPlayerController::DrawLine(FVector LineTraceStart, FVector LineTraceEnd) const
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Drawing: %s"), *(FString::SanitizeFloat(ViewPoint.X)) );
 	DrawDebugLine(
@@ -98,7 +98,7 @@ void ATankPlayerController::AimTowardsCrosshair()
 	FVector HitLocation;
 
 	if (GetSightRayHitLocation(HitLocation)) {
-		
+		UE_LOG(LogTemp, Warning, TEXT("Hit Location: %s"), *HitLocation.ToString());
 	}
 }
 
@@ -112,7 +112,9 @@ bool ATankPlayerController::GetSightRayHitLocation(FVector& HitLocation) const
 	);
 	FVector LookDirection;
 	if (GetLookDirection(ScreenLocation, LookDirection)) {
-		UE_LOG(LogTemp, Warning, TEXT("Look Direction: %s"), *LookDirection.ToString());
+		if (GetLookVectorHitLocation(LookDirection, HitLocation)) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -126,6 +128,33 @@ bool ATankPlayerController::GetLookDirection(FVector2D ScreenLocation, FVector &
 		OUT WorldCameraLocation,
 		OUT LookDirection
 	);
+}
+
+bool ATankPlayerController::GetLookVectorHitLocation(FVector& LookDirection, FVector& HitLocation) const
+{
+	FHitResult Hit;
+	FVector StartLocation = PlayerCameraManager->GetCameraLocation();	
+	FVector LookDirectionEnd = StartLocation + LookDirection * 10000;
+	bool IsHit = World->LineTraceSingleByChannel(
+		OUT Hit,
+		StartLocation,
+		LookDirectionEnd,
+		ECollisionChannel::ECC_Visibility
+	);
+	//DrawLine(StartLocation, LookDirectionEnd);
+	if (IsHit == true) {
+		UE_LOG(LogTemp, Warning, TEXT("Hit: %s"), *(Hit.GetActor()->GetName()));
+		HitLocation = Hit.Location;
+	}
+
+	return IsHit;
+
+	/*FVector LineTraceStart = ViewPoint;
+	LineTraceStart.X = LineTraceStart.X * LookDirection.X;
+	LineTraceStart.Y = LineTraceStart.Y * LookDirection.Y;
+	LineTraceStart.Z = LineTraceStart.Z * LookDirection.Z;
+	FVector LineTraceEnd = ViewPoint + LookDirection * 10000;
+	DrawLine(LineTraceStart, LineTraceEnd);*/
 }
 
 
